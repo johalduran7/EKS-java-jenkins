@@ -57,8 +57,9 @@ pipeline {
                 script {
                     checkout scm
                     script: """
-                        cd app-mvn
+                        cd ${APP_DIR}
                         mvn clean install
+                        ls target/
                     """
                 }
 
@@ -114,6 +115,7 @@ pipeline {
                             def outputBuild = sh (
                                 script: """
                                 cd ${APP_DIR}
+                                ls target/
                                 docker build -t ${ECR_REPO_NAME}:${VERSION} .
                                 """,
                                 returnStdout: true
