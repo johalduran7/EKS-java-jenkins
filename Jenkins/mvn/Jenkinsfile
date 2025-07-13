@@ -54,12 +54,11 @@ pipeline {
         }
         stage('Install dependencies') {
             steps {
-                withMaven(maven: 'maven-3.9.10') {  
-                    script {
-                        checkout scm
-                        dir(APP_DIR) {
+                script {
+                    checkout scm
+                    dir(APP_DIR) {
+                        withEnv(["PATH+MAVEN=${tool 'maven-3.9.10'}/bin"]) {
                             sh 'mvn clean install'
-                            sh 'ls -la target/'
                         }
                     }
                 }
