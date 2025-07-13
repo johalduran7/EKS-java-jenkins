@@ -1,0 +1,23 @@
+namespace: prometheus-grafana-k8s
+
+replicaCount: 1
+
+image:
+  repository: 948586925757.dkr.ecr.us-east-1.amazonaws.com/k8s-app 
+  tag: "1.1.2"
+  pullPolicy: IfNotPresent
+
+container:
+  targetPort: "3000"
+
+service:
+  port: "80"
+  targetPort: "3000"
+
+env:
+  PGHOST: postgres-service
+  PGUSER: postgres
+  PGPASSWORD: "1234"
+  PGDATABASE: people
+  PGPORT: "5432"
+  

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>John Duran's Java CICD demo</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <h1>John Duran's Java CICD demo</h1>
+
+        <h2>Add New Client</h2>
+        <form id="clientForm">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required><br>
+
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" name="phone" required><br>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required><br>
+
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" required><br>
+
+            <button type="submit">Add Client</button>
+            <p id="message"></p>
+            <p id="error"></p>
+        </form>
+
+        <h2>Client List</h2>
+        <table id="clientTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Age</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const clientForm = document.getElementById('clientForm');
+            const clientTableBody = document.querySelector('#clientTable tbody');
+            const messageDiv = document.getElementById('message');
+            const errorDiv = document.getElementById('error');
+
+            const API_BASE_URL = '/api/clients'; // Our backend API endpoint
+
+            // Function to fetch and display clients
+            const fetchClients = async () => {
+                try {
+                    const response = await fetch(API_BASE_URL);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const clients = await response.json();
+                    clientTableBody.innerHTML = ''; // Clear existing rows
+                    clients.forEach(client => {
+                        const row = clientTableBody.insertRow();
+                        row.insertCell(0).textContent = client.id;
+                        row.insertCell(1).textContent = client.name;
+                        row.insertCell(2).textContent = client.phone;
+                        row.insertCell(3).textContent = client.email;
+                        row.insertCell(4).textContent = client.age;
+
+                        const actionsCell = row.insertCell(5);
+                        actionsCell.classList.add('action-buttons');
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.onclick = () => deleteClient(client.id);
+                        actionsCell.appendChild(deleteButton);
+                    });
+                } catch (error) {
+                    console.error('Error fetching clients:', error);
+                    errorDiv.textContent = 'Failed to load clients: ' + error.message;
+                    messageDiv.textContent = '';
+                }
+            };
+
+            // Function to add a new client
+            clientForm.addEventListener('submit', async (event) => {
+                event.preventDefault(); // Prevent default form submission
+
+                const newClient = {
+                    name: document.getElementById('name').value,
+                    phone: document.getElementById('phone').value,
+                    email: document.getElementById('email').value,
+                    age: parseInt(document.getElementById('age').value, 10)
+                };
+
+                // Basic validation
+                if (!newClient.name || !newClient.phone || !newClient.email || isNaN(newClient.age)) {
+                    errorDiv.textContent = 'Please fill in all fields correctly.';
+                    messageDiv.textContent = '';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(API_BASE_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(newClient)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    messageDiv.textContent = 'Client added successfully!';
+                    errorDiv.textContent = '';
+                    clientForm.reset(); // Clear the form
+                    await fetchClients(); // Refresh the table
+                } catch (error) {
+                    console.error('Error adding client:', error);
+                    errorDiv.textContent = 'Failed to add client: ' + error.message;
+                    messageDiv.textContent = '';
+                }
+            });
+
+            // Function to delete a client
+            const deleteClient = async (id) => {
+                if (!confirm(`Are you sure you want to delete client ID: ${id}?`)) {
+                    return; // User cancelled
+                }
+                try {
+                    const response = await fetch(`${API_BASE_URL}/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    messageDiv.textContent = `Client ID ${id} deleted successfully!`;
+                    errorDiv.textContent = '';
+                    await fetchClients(); // Refresh the table
+                } catch (error) {
+                    console.error('Error deleting client:', error);
+                    errorDiv.textContent = `Failed to delete client ID ${id}: ` + error.message;
+                    messageDiv.textContent = '';
+                }
+            };
+
+            // Initial fetch of clients when the page loads
+            fetchClients();
+        });
+    </script>
+</body>
+</html>

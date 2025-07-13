@@ -111,3 +111,40 @@ Desktop.ini # Windows
 # Kubernetes files (if you manage them directly in the app repo but want to ignore local-only variations)
 # If you create local-only K8s manifests for testing:
 # *.local.yaml
+
+*
+!**/
+*.md
+*.deb
+*key_*
+*.pem
+
+
+
+!*.tf
+!*.py
+!*.yaml
+!*.yml
+!*.zip
+!*.html
+!*.txt
+!*.sh
+!Dockerfile
+!.gitkeep
+!README.md
+!app.js
+!package*.json
+
+
+!.gitignore
+
+!*/
+.terraform/
+app/node_modules/
+kubernetes_doc.yaml
+values.override.yaml
+dashboard.key
+dashboard.crt
+*.override.yaml
+dashboard.crt
+dashboard.key

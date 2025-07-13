@@ -12,8 +12,8 @@
     </parent>
 
     <groupId>com.example.johnduran</groupId>
-    <artifactId>john-duran-cicd-demo</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <artifactId>app-book</artifactId>
+    <version>1.0.0</version>
     <name>John Duran's CICD Demo Application</name>
     <description>A simple Java web app for CICD demonstration</description>
 
