@@ -36,7 +36,7 @@ resource "null_resource" "build_and_push_app-book-image" {
   triggers = {
     # Rebuild the image if the Dockerfile changes
     dockerfile_hash = filemd5("${var.app_path}/Dockerfile")
-    app_js_hash     = filemd5("${var.app_path}/target/app-book*.jar")
+    app_js_hash     = filemd5("${var.app_path}/target/app-book-1.0.0.jar")
   }
 
   provisioner "local-exec" {
