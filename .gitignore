@@ -148,3 +148,4 @@ dashboard.crt
 *.override.yaml
 dashboard.crt
 dashboard.key
+Jenkinsfile
