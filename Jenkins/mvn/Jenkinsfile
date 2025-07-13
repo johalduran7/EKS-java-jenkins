@@ -7,7 +7,7 @@ def APP_DIR='app-mvn'
 pipeline {
     agent {
         //label 'ecs_fargate_slaves_default'
-        label 'Built-In Node'
+        label 'master'
     }
     tools {
         jdk 'jdk17'      // Pre-configured in Jenkins > Global Tool Configuration
