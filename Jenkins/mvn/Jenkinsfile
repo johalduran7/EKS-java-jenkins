@@ -54,7 +54,7 @@ pipeline {
         stage('Install dependencies') {
             steps {
                 script {
-                    checkoout scm
+                    checkout scm
                     script: """
                         cd app-mvn
                         mvn clean install
@@ -68,7 +68,9 @@ pipeline {
             steps {
                 script {
                     // Checkout repository
-                    checkout scm
+                    //checkout scm
+                    ls -lrth
+                    pwd
                     println("aws_region: ${aws_region}")
                     withCredentials([[ 
                         $class: 'AmazonWebServicesCredentialsBinding',
