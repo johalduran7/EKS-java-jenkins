@@ -3,6 +3,7 @@ def VERSION = '1.0.0'
 def ECR_REPO_NAME = 'app-book'
 def aws_region = 'us-east-1'
 def ECR_REGISTRY = ''
+def APP_DIR='app-mvn'
 pipeline {
     agent {
         label 'ecs_fargate_slaves_default'
@@ -50,61 +51,68 @@ pipeline {
                 }
             }
         }
-        // stage('Install dependencies') {
-        //     steps {
+        stage('Install dependencies') {
+            steps {
+                script {
+                    checkoout scm
+                    script: """
+                        cd app-mvn
+                        mvn clean install
+                    """
+                }
 
-        //     }
+            }
 
-        // }
-        // stage('Build and push') {
-        //     steps {
-        //         script {
-        //             // Checkout repository
-        //             checkout scm
-        //             println("aws_region: ${aws_region}")
-        //             withCredentials([[ 
-        //                 $class: 'AmazonWebServicesCredentialsBinding',
-        //                 credentialsId: 'AWS_CREDENTIALS_ID',
-        //                 accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-        //                 secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-        //                 ]
-        //                 ]){
+        }
+        stage('Build and push') {
+            steps {
+                script {
+                    // Checkout repository
+                    checkout scm
+                    println("aws_region: ${aws_region}")
+                    withCredentials([[ 
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'AWS_CREDENTIALS_ID',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]
+                        ]){
                             
                             
-        //                     def outputRegistry = sh (
-        //                         script: """
-        //                         ECR_REGISTRY="\$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${aws_region}.amazonaws.com"
-        //                         echo "\$ECR_REGISTRY"
-        //                         """,
-        //                         returnStdout: true
-        //                     ).trim()
-        //                     ECR_REGISTRY=outputRegistry
-        //                     //expoected output: 948586925757.dkr.ecr.us-east-1.amazonaws.com
-        //                     println("ECR_REGISTRY: ${ECR_REGISTRY}")
+                            def outputRegistry = sh (
+                                script: """
+                                ECR_REGISTRY="\$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${aws_region}.amazonaws.com"
+                                echo "\$ECR_REGISTRY"
+                                """,
+                                returnStdout: true
+                            ).trim()
+                            ECR_REGISTRY=outputRegistry
+                            //expoected output: 948586925757.dkr.ecr.us-east-1.amazonaws.com
+                            println("ECR_REGISTRY: ${ECR_REGISTRY}")
 
-        //                     def outputBuildTagPush = sh (
-        //                         script: """
+                            def outputBuildTagPush = sh (
+                                script: """
 
-        //                         echo "PWD before kaniko:" \$(pwd)
-        //                         cd demo_kaniko/src/
-        //                         # Run Kaniko executor directly (since it's installed in the agent)
-        //                         /kaniko/executor \
-        //                             --context=dir://\$(pwd)/ \
-        //                             --dockerfile=\$(pwd)/Dockerfile \
-        //                             --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
-        //                             --cache-repo=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
-        //                             --cache=false \
-        //                             --cache-dir=/kaniko/cache                    
-        //                         """,
-        //                         returnStdout: true
-        //                     ).trim()
+                                echo "PWD before kaniko:" \$(pwd)
+                                cd ${APP_DIR}
+                                # Run Kaniko executor directly (since it's installed in the agent)
+                                /kaniko/executor \
+                                    --context=dir://\$(pwd)/ \
+                                    --dockerfile=\$(pwd)/Dockerfile \
+                                    --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                    --cache-repo=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                    --cache=false \
+                                    --cache-dir=/kaniko/cache                    
+                                """,
+                                returnStdout: true
+                            ).trim()
                                                    
-        //             }
+                    }
                 
-        //         }
-        //     }
+                }
+            }
 
-        // }
+        }
 
 
 
