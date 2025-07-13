@@ -6,7 +6,8 @@ def ECR_REGISTRY = ''
 def APP_DIR='app-mvn'
 pipeline {
     agent {
-        label 'ecs_fargate_slaves_default'
+        //label 'ecs_fargate_slaves_default'
+        label 'Built-In Node'
     }
     tools {
         jdk 'jdk17'      // Pre-configured in Jenkins > Global Tool Configuration
@@ -64,7 +65,7 @@ pipeline {
             }
 
         }
-        stage('Build and push') {
+        stage('Build and push - Kaniko') {
             steps {
                 script {
                     // Checkout repository
@@ -92,22 +93,45 @@ pipeline {
                             //expoected output: 948586925757.dkr.ecr.us-east-1.amazonaws.com
                             println("ECR_REGISTRY: ${ECR_REGISTRY}")
 
-                            def outputBuildTagPush = sh (
-                                script: """
+                            // when using Kaniko
+                            // def outputBuildTagPush = sh (
+                            //     script: """
 
-                                echo "PWD before kaniko:" \$(pwd)
+                            //     echo "PWD before kaniko:" \$(pwd)
+                            //     cd ${APP_DIR}
+                            //     # Run Kaniko executor directly (since it's installed in the agent)
+                            //     /kaniko/executor \
+                            //         --context=dir://\$(pwd)/ \
+                            //         --dockerfile=\$(pwd)/Dockerfile \
+                            //         --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                            //         --cache-repo=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                            //         --cache=false \
+                            //         --cache-dir=/kaniko/cache                    
+                            //     """,
+                            //     returnStdout: true
+                            // ).trim()
+
+                            def outputBuild = sh (
+                                script: """
                                 cd ${APP_DIR}
-                                # Run Kaniko executor directly (since it's installed in the agent)
-                                /kaniko/executor \
-                                    --context=dir://\$(pwd)/ \
-                                    --dockerfile=\$(pwd)/Dockerfile \
-                                    --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
-                                    --cache-repo=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
-                                    --cache=false \
-                                    --cache-dir=/kaniko/cache                    
+                                docker build -t ${ECR_REPO_NAME}:${VERSION} .
                                 """,
                                 returnStdout: true
                             ).trim()
+
+                            def outputTag = sh (
+                                script: """
+                                docker tag ${ECR_REPO_NAME}:${VERSION} ${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION}
+                                """,
+                                returnStdout: true
+                            ).trim()
+
+                            def outputPush = sh (
+                                script: """
+                                docker push ${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION}
+                                """,
+                                returnStdout: true
+                            ).trim()     
                                                    
                     }
                 
