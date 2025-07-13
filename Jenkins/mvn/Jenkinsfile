@@ -69,8 +69,8 @@ pipeline {
                 script {
                     // Checkout repository
                     //checkout scm
-                    ls -lrth
-                    pwd
+                    sh 'ls -lrth'
+                    sh 'pwd'
                     println("aws_region: ${aws_region}")
                     withCredentials([[ 
                         $class: 'AmazonWebServicesCredentialsBinding',
