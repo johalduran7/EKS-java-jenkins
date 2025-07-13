@@ -1,0 +1,113 @@
+# Compiled class file
+*.class
+
+# Log files
+*.log
+logs/
+target/*.log
+
+# Package Files
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties # Added for some Maven setups
+
+# Gradle
+.gradle/
+build/
+.apt_generated/ # For annotation processing
+.project.apt_generated/ # Another annotation processing output
+!gradle-wrapper.jar # Keep the wrapper JAR if you use Gradle Wrapper
+!gradle-wrapper.properties # Keep the wrapper properties
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse
+.project
+.classpath
+.settings/
+.cache/
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*.orig
+rebel.xml # JRebel agent configuration
+
+# VS Code
+.vscode/
+.history/ # VS Code local history
+
+# OS Generated Files
+.DS_Store # Mac
+Thumbs.db # Windows
+ehthumbs.db # Windows
+Desktop.ini # Windows
+*.sb # Sublime Text project files
+
+# Specific to Spring Boot applications
+# Application-specific log directory (if not already covered by *.log or logs/)
+# spring-boot-app.log
+# catalina.out # Common for Tomcat logs if running outside Spring Boot embedded
+
+# Test reports
+/surefire-reports/
+/failsafe-reports/
+
+# Dependency locking files (if used)
+# For Maven:
+# .flattened-pom.xml
+
+# For Gradle:
+# *.lock
+
+# Data files (if not intended to be version controlled, e.g., local H2 DB files)
+*.mv.db
+*.trace.db
+
+# Other common temporary files
+*.pid # Process ID files
+*.hprof # JVM heap dumps
+*.local
+*.iml # In case it's generated outside .idea
+
+# For Lombok
+# lombok.config # if you have a project-specific lombok.config that should be ignored
+
+# Environment variables files (if any are committed, though usually not)
+.env
+.env.*
+.local.env
+
+# Configuration files that might be local/sensitive
+# application-dev.properties # If you have local specific profiles that should not be committed
+# application-local.properties
+# application-test.properties # If specific to local testing setup
+# If you have specific profile properties files that are ONLY for local use and not for shared environments:
+# src/main/resources/application-local.properties
+# src/main/resources/application-dev.properties
+
+# Kubernetes files (if you manage them directly in the app repo but want to ignore local-only variations)
+# If you create local-only K8s manifests for testing:
+# *.local.yaml
