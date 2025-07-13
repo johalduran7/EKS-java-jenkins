@@ -1,36 +1,21 @@
-// Jenkinsfile (Declarative Pipeline)
-
 pipeline {
-    // Define where the pipeline will run. 'any' means on any available agent.
-    // If you have specific agents (e.g., agents with 'maven' label), you can use:
-    // agent { label 'maven-agent' }
     agent {
-        //label 'ecs_fargate_slaves_default'
         label 'master'
     }
-
-    // Define the tools required for this pipeline.
-    // 'maven' refers to a Maven installation configured in Jenkins' Global Tool Configuration.
-    // 'jdk' refers to a JDK installation configured in Jenkins' Global Tool Configuration.
     tools {
-        // IMPORTANT: Replace 'M3' and 'JDK_17' with the actual names
-        // you've given to your Maven and JDK installations in
-        // "Manage Jenkins" -> "Global Tool Configuration".
         maven 'maven-3.9.10'
         jdk 'jdk17'
     }
-
     stages {
         stage('Verify Maven Version') {
             steps {
+                echo 'Checking environment variables...'
+                sh 'env' // <--- ADD THIS LINE
                 echo 'Checking Maven version...'
-                // Execute the Maven version command
                 sh 'mvn -v'
             }
         }
     }
-
-    // Optional: Post-build actions
     post {
         always {
             echo 'Pipeline finished.'
