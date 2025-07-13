@@ -54,17 +54,16 @@ pipeline {
         }
         stage('Install dependencies') {
             steps {
-                script {
-                    checkout scm
-                    sh """
-                        cd ${APP_DIR}
-                        mvn clean install
-                        ls target/
-                    """
+                withMaven(maven: 'maven-3.9.10') {  
+                    script {
+                        checkout scm
+                        dir(APP_DIR) {
+                            sh 'mvn clean install'
+                            sh 'ls -la target/'
+                        }
+                    }
                 }
-
             }
-
         }
         stage('Build and push - Kaniko or Docker') {
             steps {
