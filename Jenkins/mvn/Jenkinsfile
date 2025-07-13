@@ -56,7 +56,7 @@ pipeline {
             steps {
                 script {
                     checkout scm
-                    script: """
+                    sh """
                         cd ${APP_DIR}
                         mvn clean install
                         ls target/
