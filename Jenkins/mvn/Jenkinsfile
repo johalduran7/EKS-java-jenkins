@@ -111,6 +111,8 @@ pipeline {
 
                             if (status != 0) {
                                 error "❌ Kaniko build failed with status ${status}"
+                            } else {
+                                println("✅ build done with status: status ${status}")
                             }
 
 
