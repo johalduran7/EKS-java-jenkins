@@ -57,10 +57,8 @@ pipeline {
                 script {
                     checkout scm
                     script """
-                        mvn clean install
-                        ls -lrth target
+                    mvn clean install
                     """
-                    }
                 }
             }
         }
