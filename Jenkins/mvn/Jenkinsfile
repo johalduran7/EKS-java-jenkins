@@ -1,30 +1,148 @@
+def ENVIRONMENT = 'main'
+def VERSION = '1.0.1'
+def ECR_REPO_NAME = 'app-book'
+def aws_region = 'us-east-1'
+def ECR_REGISTRY = ''
+def APP_DIR='app-mvn'
 pipeline {
     agent {
+        //label 'ecs_fargate_slaves_default'
         label 'master'
     }
     tools {
+        jdk 'jdk17'      // Pre-configured in Jenkins > Global Tool Configuration
         maven 'maven-3.9.10'
-        jdk 'jdk17'
     }
     stages {
-        stage('Verify Maven Version') {
+        stage('Detect Branch') {
             steps {
-                echo 'Checking environment variables...'
-                sh 'env' // <--- ADD THIS LINE
-                echo 'Checking Maven version...'
-                sh 'mvn -v'
+                script {
+                    sh 'printenv'
+                    if ( !env.GIT_BRANCH?.trim() ) {
+                        // Execute the git command to find the branch containing the commit
+                        def branchOutput = sh(
+                            script: """
+                                git branch -r --contains ${env.GIT_COMMIT} | sed 's| *origin/||'
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        echo "Raw output of git branch -r --contains: ${branchOutput}"
+
+                        // Ensure branchOutput is not empty
+                        if (branchOutput.isEmpty()) {
+                            error "Commit ${env.GIT_COMMIT} not found in any branch."
+                        } else {
+                            ENVIRONMENT="${branchOutput}"
+                            println("Detected branch: ${ENVIRONMENT}")
+
+                        }
+                    }else {
+                        def branchOutputNoCommit = sh(
+                            script: """
+                                echo ${env.GIT_BRANCH} | sed 's| *origin/||'
+                            """,
+                            returnStdout: true
+                        ).trim()
+                        ENVIRONMENT="${branchOutputNoCommit}"
+                        println("Detected branch no commit condition: ${ENVIRONMENT}")
+
+                    }
+
+                }
             }
         }
-    }
-    post {
-        always {
-            echo 'Pipeline finished.'
+        stage('Install dependencies') {
+            steps {
+                script {
+                    checkout scm
+                    script """
+                        mvn clean install
+                        ls -lrth target
+                    """
+                    }
+                }
+            }
         }
-        success {
-            echo 'Maven version check succeeded!'
+        stage('Build and push - Kaniko or Docker') {
+            steps {
+                script {
+                    // Checkout repository
+                    //checkout scm
+                    sh 'ls -lrth'
+                    sh 'pwd'
+                    println("aws_region: ${aws_region}")
+                    withCredentials([[ 
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'AWS_CREDENTIALS_ID',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                        ]
+                        ]){
+                            
+                            
+                            def outputRegistry = sh (
+                                script: """
+                                ECR_REGISTRY="\$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${aws_region}.amazonaws.com"
+                                echo "\$ECR_REGISTRY"
+                                """,
+                                returnStdout: true
+                            ).trim()
+                            ECR_REGISTRY=outputRegistry
+                            //expoected output: 948586925757.dkr.ecr.us-east-1.amazonaws.com
+                            println("ECR_REGISTRY: ${ECR_REGISTRY}")
+
+                            // when using Kaniko
+                            // def outputBuildTagPush = sh (
+                            //     script: """
+
+                            //     echo "PWD before kaniko:" \$(pwd)
+                            //     cd ${APP_DIR}
+                            //     # Run Kaniko executor directly (since it's installed in the agent)
+                            //     /kaniko/executor \
+                            //         --context=dir://\$(pwd)/ \
+                            //         --dockerfile=\$(pwd)/Dockerfile \
+                            //         --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                            //         --cache-repo=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                            //         --cache=false \
+                            //         --cache-dir=/kaniko/cache                    
+                            //     """,
+                            //     returnStdout: true
+                            // ).trim()
+
+                            def outputBuild = sh (
+                                script: """
+                                cd ${APP_DIR}
+                                ls -lrth target/
+                                pwd
+                                ls -lrth 
+                                docker build -t ${ECR_REPO_NAME}:${VERSION} .
+                                """,
+                                returnStdout: true
+                            ).trim()
+
+                            def outputTag = sh (
+                                script: """
+                                docker tag ${ECR_REPO_NAME}:${VERSION} ${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION}
+                                """,
+                                returnStdout: true
+                            ).trim()
+
+                            def outputPush = sh (
+                                script: """
+                                docker push ${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION}
+                                """,
+                                returnStdout: true
+                            ).trim()     
+                                                   
+                    }
+                
+                }
+            }
+
         }
-        failure {
-            echo 'Maven version check failed!'
-        }
+
+
+
     }
 }
