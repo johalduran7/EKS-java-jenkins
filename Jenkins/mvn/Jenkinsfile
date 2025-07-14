@@ -6,8 +6,8 @@ def ECR_REGISTRY = ''
 def APP_DIR='app-mvn'
 pipeline {
     agent {
-        //label 'ecs_fargate_slaves_default'
-        label 'master'
+        label 'ecs_fargate_slaves_default'
+        //label 'master'
     }
     tools {
         jdk 'jdk17'      // Pre-configured in Jenkins > Global Tool Configuration
