@@ -94,23 +94,24 @@ pipeline {
                             println("ECR_REGISTRY: ${ECR_REGISTRY}")
 
                             // when using Kaniko
-                            sh """
-                                set -eo pipefail
+                            def status = sh(
+                                script: """
+                                    set -eo pipefail
+                                    cd ${APP_DIR}
+                                    /kaniko/executor \
+                                        --context=dir://\$(pwd)/ \
+                                        --dockerfile=\$(pwd)/Dockerfile \
+                                        --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                        --cache=false \
+                                        --verbosity=info
+                                    echo "✅ Kaniko build done"
+                                """,
+                                returnStatus: true
+                            )
 
-                                echo "PWD before Kaniko: \$(pwd)"
-                                cd ${APP_DIR}
-
-                                echo "Starting Kaniko build..."
-
-                                /kaniko/executor \
-                                    --context=dir://\$(pwd)/ \
-                                    --dockerfile=\$(pwd)/Dockerfile \
-                                    --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
-                                    --cache=false \
-                                    --verbosity=info
-
-                                echo "✅ Kaniko build completed successfully"
-                            """
+                            if (status != 0) {
+                                error "❌ Kaniko build failed with status ${status}"
+                            }
 
 
                             // when using agents with Docker
