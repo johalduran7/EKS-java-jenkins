@@ -9,10 +9,10 @@ pipeline {
         label 'ecs_fargate_slaves_default'
         //label 'master'
     }
-    tools {
-        jdk 'jdk17'      // Pre-configured in Jenkins > Global Tool Configuration
-        maven 'maven-3.9.10'
-    }
+    // tools {
+    //     jdk 'jdk17'      // Pre-configured in Jenkins > Global Tool Configuration
+    //     maven 'maven-3.9.10'
+    // }
     stages {
         stage('Detect Branch') {
             steps {
