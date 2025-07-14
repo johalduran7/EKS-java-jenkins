@@ -94,47 +94,48 @@ pipeline {
                             println("ECR_REGISTRY: ${ECR_REGISTRY}")
 
                             // when using Kaniko
-                            // def outputBuildTagPush = sh (
-                            //     script: """
+                            def outputBuildTagPush = sh (
+                                script: """
 
-                            //     echo "PWD before kaniko:" \$(pwd)
+                                echo "PWD before kaniko:" \$(pwd)
+                                cd ${APP_DIR}
+                                # Run Kaniko executor directly (since it's installed in the agent)
+                                /kaniko/executor \
+                                    --context=dir://\$(pwd)/ \
+                                    --dockerfile=\$(pwd)/Dockerfile \
+                                    --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                    --cache-repo=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                    --cache=false \
+                                    --cache-dir=/kaniko/cache                    
+                                """,
+                                returnStdout: true
+                            ).trim()
+
+                            // when using agents with Docker
+                            // def outputBuild = sh (
+                            //     script: """
                             //     cd ${APP_DIR}
-                            //     # Run Kaniko executor directly (since it's installed in the agent)
-                            //     /kaniko/executor \
-                            //         --context=dir://\$(pwd)/ \
-                            //         --dockerfile=\$(pwd)/Dockerfile \
-                            //         --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
-                            //         --cache-repo=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
-                            //         --cache=false \
-                            //         --cache-dir=/kaniko/cache                    
+                            //     ls -lrth target/
+                            //     pwd
+                            //     ls -lrth 
+                            //     docker build -t ${ECR_REPO_NAME}:${VERSION} .
                             //     """,
                             //     returnStdout: true
                             // ).trim()
 
-                            def outputBuild = sh (
-                                script: """
-                                cd ${APP_DIR}
-                                ls -lrth target/
-                                pwd
-                                ls -lrth 
-                                docker build -t ${ECR_REPO_NAME}:${VERSION} .
-                                """,
-                                returnStdout: true
-                            ).trim()
+                            // def outputTag = sh (
+                            //     script: """
+                            //     docker tag ${ECR_REPO_NAME}:${VERSION} ${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION}
+                            //     """,
+                            //     returnStdout: true
+                            // ).trim()
 
-                            def outputTag = sh (
-                                script: """
-                                docker tag ${ECR_REPO_NAME}:${VERSION} ${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION}
-                                """,
-                                returnStdout: true
-                            ).trim()
-
-                            def outputPush = sh (
-                                script: """
-                                docker push ${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION}
-                                """,
-                                returnStdout: true
-                            ).trim()     
+                            // def outputPush = sh (
+                            //     script: """
+                            //     docker push ${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION}
+                            //     """,
+                            //     returnStdout: true
+                            // ).trim()     
                                                    
                     }
                 
