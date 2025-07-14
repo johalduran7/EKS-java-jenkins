@@ -96,19 +96,24 @@ pipeline {
                             // when using Kaniko
                             def outputBuildTagPush = sh (
                                 script: """
+                                    set -e  # Fail on error
 
-                                echo "PWD before kaniko:" \$(pwd)
-                                cd ${APP_DIR}
-                                # Run Kaniko executor directly (since it's installed in the agent)
-                                /kaniko/executor \
-                                    --context=dir://\$(pwd)/ \
-                                    --dockerfile=\$(pwd)/Dockerfile \
-                                    --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
-                                    --cache-repo=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
-                                    --cache=false \
-                                    --cache-dir=/kaniko/cache  \
-                                    --verbosity=info \
-                                    || true                  
+                                    echo "PWD before Kaniko: \$(pwd)"
+                                    cd ${APP_DIR}
+
+                                    echo "Starting Kaniko build..."
+
+                                    /kaniko/executor \
+                                        --context=dir://\$(pwd)/ \
+                                        --dockerfile=\$(pwd)/Dockerfile \
+                                        --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                        --cache=false \
+                                        --verbosity=info &
+
+                                    pid=\$!
+                                    wait \$pid
+
+                                    echo "Kaniko build completed"
                                 """,
                                 returnStdout: true
                             ).trim()
