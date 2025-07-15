@@ -4,13 +4,17 @@ pipeline {
     }
 
     environment {
-        TEST_IMAGE_VERSION = 'test-simple-$(date +%s)' // Unique tag for each run
-        ECR_REPO_NAME = 'simple-test-image-from-pipeline' // New repo name for this test image
+        ENVIRONMENT = 'main'
+        VERSION = '1.0.1'
+        ECR_REPO_NAME = 'app-book'
         AWS_REGION = 'us-east-1'
+        APP_DIR = 'app-mvn'
     }
 
     stages {
-        stage('Build and Push Simple Test Image with Kaniko') {
+
+
+        stage('Build and Push with Kaniko') {
             steps {
                 script {
                     withCredentials([[
@@ -28,13 +32,7 @@ pipeline {
                         env.ECR_REGISTRY = "${registry}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
                         echo "🔑 Authenticated to ${env.ECR_REGISTRY}"
-
-                        // Define a temporary directory for our Dockerfile and context
                         def tempBuildDir = 'kaniko-temp-build'
-                        sh "mkdir -p ${tempBuildDir}"
-
-                        // Generate a simple Dockerfile directly within the pipeline
-                        // This Dockerfile uses 'alpine' as a base, which is tiny and has basic commands
                         sh """
                             echo 'FROM alpine:latest' > "${tempBuildDir}/Dockerfile"
                             echo 'WORKDIR /test' >> "${tempBuildDir}/Dockerfile"
@@ -43,22 +41,19 @@ pipeline {
                             echo "Generated Dockerfile content:"
                             cat "${tempBuildDir}/Dockerfile"
                         """
-
-                        dir("${tempBuildDir}") { // Change directory into the temp build context
-                            echo "🚀 Starting Kaniko build for simple test image"
-                            echo "Building image: ${ECR_REGISTRY}/${ECR_REPO_NAME}:${TEST_IMAGE_VERSION}"
+                        dir("${tempBuildDir}") {
+                            echo "🚀 Starting Kaniko build"
 
                             sh '''
                             /kaniko/executor \
                                 --context=dir://$(pwd)/ \
                                 --dockerfile=$(pwd)/Dockerfile \
-                                --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${TEST_IMAGE_VERSION} \
+                                --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
                                 --cache=false \
                                 --verbosity=info
                             '''
 
-                            echo "✅ Kaniko build and push complete for simple test image"
-                            echo "Image pushed: ${ECR_REGISTRY}/${ECR_REPO_NAME}:${TEST_IMAGE_VERSION}"
+                            echo "✅ Kaniko build complete"
                         }
                     }
                 }
