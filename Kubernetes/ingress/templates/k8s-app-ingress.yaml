@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: k8s-app-ingress
-  namespace: prometheus-grafana-k8s
+  name: app-book-ingress
+  namespace: app-book
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
@@ -15,6 +15,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: k8s-app
+            name: app-book
             port:
               number: 80

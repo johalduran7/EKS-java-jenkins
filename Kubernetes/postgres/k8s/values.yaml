@@ -1,4 +1,4 @@
-namespace: prometheus-grafana-k8s
+namespace: app-book
 
 replicaCount: 1
 
@@ -10,7 +10,7 @@ service:
   name: postgres-service
 
 env:
-  POSTGRES_DB: people
+  POSTGRES_DB: john_duran_db
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: "youpassword"
 
