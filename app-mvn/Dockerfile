@@ -1,4 +1,5 @@
-FROM eclipse-temurin:17-jre-alpine
+#FROM eclipse-temurin:17-jre-alpine
+FROM openjdk:17-jdk-slim
 WORKDIR /app
 COPY target/app-book-1.0.0.jar app.jar
 #ENTRYPOINT ["java", "-jar", "app.jar"]
