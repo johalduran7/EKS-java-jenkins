@@ -149,3 +149,4 @@ dashboard.crt
 dashboard.crt
 dashboard.key
 !Jenkinsfile
+!.dockerignore

@@ -1,0 +1,7 @@
+target/
+!target/app-book-1.0.0.jar
+.git
+.gitignore
+README.md
+Dockerfile
+*.md
