@@ -21,5 +21,5 @@ pgadmin:
   # Postgress access
   PGHOST: postgres-service
   PGUSER: postgres
-  PGPASSWORD: "1234"
-  PGDATABASE: people
+  PGPASSWORD: "postgres"
+  PGDATABASE: john_duran_db
