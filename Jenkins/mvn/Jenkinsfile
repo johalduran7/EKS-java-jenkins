@@ -4,52 +4,15 @@ pipeline {
     }
 
     environment {
-        ENVIRONMENT = 'main'
-        VERSION = '1.0.1'
-        ECR_REPO_NAME = 'app-book'
+        # Changed VERSION and ECR_REPO_NAME for the test image
+        TEST_IMAGE_VERSION = 'test-simple-$(date +%s)' // Unique tag for each run
+        ECR_REPO_NAME = 'simple-test-image-from-pipeline' // New repo name for this test image
         AWS_REGION = 'us-east-1'
-        APP_DIR = 'app-mvn'
+        # APP_DIR is no longer needed for this specific test
     }
 
     stages {
-        stage('Detect Branch') {
-            steps {
-                script {
-                    sh 'printenv'
-
-                    def branchName = env.GIT_BRANCH?.trim()
-                    if (!branchName) {
-                        def detectedBranch = sh(
-                            script: "git branch -r --contains ${env.GIT_COMMIT} | sed 's| *origin/||'",
-                            returnStdout: true
-                        ).trim()
-                        if (detectedBranch) {
-                            ENVIRONMENT = detectedBranch
-                            echo "✔ Detected branch: ${ENVIRONMENT}"
-                        } else {
-                            error "❌ Commit ${env.GIT_COMMIT} not found in any branch."
-                        }
-                    } else {
-                        ENVIRONMENT = sh(
-                            script: "echo ${env.GIT_BRANCH} | sed 's| *origin/||'",
-                            returnStdout: true
-                        ).trim()
-                        echo "✔ Detected branch (GIT_BRANCH available): ${ENVIRONMENT}"
-                    }
-                }
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                dir("${APP_DIR}") {
-                    echo "📦 Installing Maven dependencies in ${APP_DIR}"
-                    sh 'mvn clean install'
-                }
-            }
-        }
-
-        stage('Build and Push with Kaniko') {
+        stage('Build and Push Simple Test Image with Kaniko') {
             steps {
                 script {
                     withCredentials([[
@@ -68,19 +31,36 @@ pipeline {
 
                         echo "🔑 Authenticated to ${env.ECR_REGISTRY}"
 
-                        dir("${APP_DIR}") {
-                            echo "🚀 Starting Kaniko build"
+                        // Define a temporary directory for our Dockerfile and context
+                        def tempBuildDir = 'kaniko-temp-build'
+                        sh "mkdir -p ${tempBuildDir}"
+
+                        // Generate a simple Dockerfile directly within the pipeline
+                        // This Dockerfile uses 'alpine' as a base, which is tiny and has basic commands
+                        sh """
+                            echo 'FROM alpine:latest' > "${tempBuildDir}/Dockerfile"
+                            echo 'WORKDIR /test' >> "${tempBuildDir}/Dockerfile"
+                            echo 'RUN echo "Hello from test image build!" > /test/hello.txt' >> "${tempBuildDir}/Dockerfile"
+                            echo 'CMD ["sh", "-c", "echo \"Container started\"; ls -l /; sleep 10; cat /test/hello.txt; echo \"Container stopping.\""]' >> "${tempBuildDir}/Dockerfile"
+                            echo "Generated Dockerfile content:"
+                            cat "${tempBuildDir}/Dockerfile"
+                        """
+
+                        dir("${tempBuildDir}") { // Change directory into the temp build context
+                            echo "🚀 Starting Kaniko build for simple test image"
+                            echo "Building image: ${ECR_REGISTRY}/${ECR_REPO_NAME}:${TEST_IMAGE_VERSION}"
 
                             sh '''
                             /kaniko/executor \
                                 --context=dir://$(pwd)/ \
                                 --dockerfile=$(pwd)/Dockerfile \
-                                --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${TEST_IMAGE_VERSION} \
                                 --cache=false \
                                 --verbosity=info
                             '''
 
-                            echo "✅ Kaniko build complete"
+                            echo "✅ Kaniko build and push complete for simple test image"
+                            echo "Image pushed: ${ECR_REGISTRY}/${ECR_REPO_NAME}:${TEST_IMAGE_VERSION}"
                         }
                     }
                 }
