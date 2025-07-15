@@ -1,154 +1,103 @@
-def ENVIRONMENT = 'main'
-def VERSION = '1.0.1'
-def ECR_REPO_NAME = 'app-book'
-def aws_region = 'us-east-1'
-def ECR_REGISTRY = ''
-def APP_DIR='app-mvn'
 pipeline {
     agent {
         label 'ecs_fargate_slaves_default'
-        //label 'master'
     }
-    // tools {
-    //     jdk 'jdk17'      // Pre-configured in Jenkins > Global Tool Configuration
-    //     maven 'maven-3.9.10'
-    // }
+
+    environment {
+        ENVIRONMENT = 'main'
+        VERSION = '1.0.1'
+        ECR_REPO_NAME = 'app-book'
+        AWS_REGION = 'us-east-1'
+        APP_DIR = 'app-mvn'
+    }
+
     stages {
-        stage('Detect Branch') {
+
+        stage('Build and Push with Kaniko - TEST') {
             steps {
                 script {
-                    sh 'printenv'
-                    if ( !env.GIT_BRANCH?.trim() ) {
-                        // Execute the git command to find the branch containing the commit
-                        def branchOutput = sh(
-                            script: """
-                                git branch -r --contains ${env.GIT_COMMIT} | sed 's| *origin/||'
-                            """,
-                            returnStdout: true
-                        ).trim()
-
-                        echo "Raw output of git branch -r --contains: ${branchOutput}"
-
-                        // Ensure branchOutput is not empty
-                        if (branchOutput.isEmpty()) {
-                            error "Commit ${env.GIT_COMMIT} not found in any branch."
-                        } else {
-                            ENVIRONMENT="${branchOutput}"
-                            println("Detected branch: ${ENVIRONMENT}")
-
-                        }
-                    }else {
-                        def branchOutputNoCommit = sh(
-                            script: """
-                                echo ${env.GIT_BRANCH} | sed 's| *origin/||'
-                            """,
-                            returnStdout: true
-                        ).trim()
-                        ENVIRONMENT="${branchOutputNoCommit}"
-                        println("Detected branch no commit condition: ${ENVIRONMENT}")
-
-                    }
-
-                }
-            }
-        }
-        stage('Install Dependencies') {
-            steps {
-                // Ensure APP_DIR is defined, e.g., in an 'environment' block
-                // environment {
-                //     APP_DIR = 'app-mvn' // Assuming your project's subfolder is 'app-mvn'
-                // }
-
-                dir("${APP_DIR}") { // Changes directory for the commands within this block
-                    echo "Navigated to: ${APP_DIR}"
-                    sh 'mvn clean install' // Execute shell command directly
-                }
-            }
-        }
-        stage('Build and push - Kaniko or Docker') {
-            steps {
-                script {
-                    // Checkout repository
-                    //checkout scm
-                    sh 'ls -lrth'
-                    sh 'pwd'
-                    println("aws_region: ${aws_region}")
-                    withCredentials([[ 
+                    withCredentials([[
                         $class: 'AmazonWebServicesCredentialsBinding',
                         credentialsId: 'AWS_CREDENTIALS_ID',
                         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-                        ]
-                        ]){
-                            
-                            
-                            def outputRegistry = sh (
-                                script: """
-                                ECR_REGISTRY="\$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${aws_region}.amazonaws.com"
-                                echo "\$ECR_REGISTRY"
-                                """,
-                                returnStdout: true
-                            ).trim()
-                            ECR_REGISTRY=outputRegistry
-                            //expoected output: 948586925757.dkr.ecr.us-east-1.amazonaws.com
-                            println("ECR_REGISTRY: ${ECR_REGISTRY}")
-                            echo "🔑 Authenticated to ${env.ECR_REGISTRY}"
-                            // when using Kaniko
-                            dir("${APP_DIR}") {
-                                echo "🚀 Starting Kaniko build"
+                    ]]) {
 
-                                def status = sh (
-                                    script: """
-                                    /kaniko/executor \
-                                    --context=dir://\$(pwd)/ \
-                                    --dockerfile=\$(pwd)/Dockerfile \
-                                    --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
-                                    --cache=false \
-                                    --verbosity=info
-                                    """,
-                                    returnStatus: true
-                                )
-                                if (status != 0) {
-                                    error "❌ Kaniko build failed with status ${status}"
-                                }
+                        def registry = sh(
+                            script: """
+                                aws sts get-caller-identity --query Account --output text
+                            """, returnStdout: true
+                        ).trim()
+                        env.ECR_REGISTRY = "${registry}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
-                                echo "✅ Kaniko build complete"
-                            }
+                        echo "🔑 Authenticated to ${env.ECR_REGISTRY}"
+                        def tempBuildDir = 'kaniko-temp-build'
+                        sh "mkdir ${tempBuildDir}"
+                        sh """
+                            echo 'FROM eclipse-temurin:17-jre-alpine' > "${tempBuildDir}/Dockerfile"
+                            echo 'WORKDIR /app' >> "${tempBuildDir}/Dockerfile"
+                            echo 'RUN echo "Fake Java app" > app.log' >> "${tempBuildDir}/Dockerfile"
+                            echo '#CMD ["java", "-jar", "app.jar"]' >> "${tempBuildDir}/Dockerfile"
+                            echo 'RUN echo "Finalizing image" && true' >> "${tempBuildDir}/Dockerfile"
+                            echo "Generated Dockerfile content:"
+                            cat "${tempBuildDir}/Dockerfile"
+                        """
+                        dir("${tempBuildDir}") {
+                            echo "🚀 Starting Kaniko build"
 
-                            // when using agents with Docker
-                            // def outputBuild = sh (
-                            //     script: """
-                            //     cd ${APP_DIR}
-                            //     ls -lrth target/
-                            //     pwd
-                            //     ls -lrth 
-                            //     docker build -t ${ECR_REPO_NAME}:${VERSION} .
-                            //     """,
-                            //     returnStdout: true
-                            // ).trim()
+                            sh '''
+                            /kaniko/executor \
+                                --context=dir://$(pwd)/ \
+                                --dockerfile=$(pwd)/Dockerfile \
+                                --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                --cache=false \
+                                --verbosity=info
+                            '''
 
-                            // def outputTag = sh (
-                            //     script: """
-                            //     docker tag ${ECR_REPO_NAME}:${VERSION} ${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION}
-                            //     """,
-                            //     returnStdout: true
-                            // ).trim()
+                            echo "✅ Kaniko build complete"
+                        }
+                        // dir("${tempBuildDir}") {
+                        //     writeFile file: 'run-kaniko.sh', text: '''
+                        //     #!/busybox/sh
+                        //     set -ex
 
-                            // def outputPush = sh (
-                            //     script: """
-                            //     docker push ${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION}
-                            //     """,
-                            //     returnStdout: true
-                            // ).trim()     
-                                                   
+                        //     /kaniko/executor \
+                        //     --context=dir://$(pwd)/ \
+                        //     --dockerfile=$(pwd)/Dockerfile \
+                        //     --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                        //     --cache=false \
+                        //     --verbosity=info > kaniko.log 2>&1 &
+
+                        //     KANIKO_PID=$!
+
+                        //     # Stream logs so Jenkins doesn't think it's idle/stuck
+                        //     tail -f kaniko.log &
+                        //     TAIL_PID=$!
+
+                        //     # Wait for Kaniko to finish
+                        //     wait $KANIKO_PID
+                        //     KANIKO_EXIT=$?
+
+                        //     # Kill tail process
+                        //     kill $TAIL_PID || true
+
+                        //     echo "✅ Kaniko exited with code $KANIKO_EXIT"
+                        //     exit $KANIKO_EXIT
+
+                        //     '''
+                        //     sh 'chmod +x run-kaniko.sh'
+                        //     def status = sh(script: './run-kaniko.sh', returnStatus: true)
+                        //     if (status != 0) {
+                        //         error "❌ Kaniko build failed with status ${status}"
+                        //     } else {
+                        //         echo "✅ Kaniko script completed with status ${status}"
+                        //     }
+
+                        // }
+
                     }
-                
                 }
             }
-
         }
-
-
-
     }
 }
