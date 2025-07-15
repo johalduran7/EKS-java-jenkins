@@ -1,5 +1,5 @@
 def ENVIRONMENT = 'main'
-def VERSION = '1.0.1'
+def VERSION = '1.0.0'
 def ECR_REPO_NAME = 'app-book'
 def aws_region = 'us-east-1'
 def ECR_REGISTRY = ''
