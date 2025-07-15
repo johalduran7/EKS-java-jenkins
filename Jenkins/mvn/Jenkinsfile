@@ -98,10 +98,10 @@ pipeline {
                                 echo "🚀 Starting Kaniko build"
 
                                 sh """
-                                    /kaniko/executor \
-                                    --context=dir://$(pwd)/ \
-                                    --dockerfile=$(pwd)/Dockerfile \
-                                    --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                    /kaniko/executor \\
+                                    --context=dir://\$(pwd)/ \\  // 
+                                    --dockerfile=\$(pwd)/Dockerfile \\ // 
+                                    --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \\
                                     --cache=false 
                                 """
 
