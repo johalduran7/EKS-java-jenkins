@@ -34,7 +34,7 @@ pipeline {
                         def tempBuildDir = 'kaniko-temp-build'
                         sh "mkdir ${tempBuildDir}"
                         sh """
-                            echo 'FROM openjdk:17-jre-slim' > "${tempBuildDir}/Dockerfile"
+                            echo 'FROM openjdk:17-jre-slim-bullseye' > "${tempBuildDir}/Dockerfile"
                             echo '#WORKDIR /app' >> "${tempBuildDir}/Dockerfile"
                             echo '#RUN echo "Fake Java app" > app.log' >> "${tempBuildDir}/Dockerfile"
                             echo '#CMD ["java", "-jar", "app.jar"]' >> "${tempBuildDir}/Dockerfile"
