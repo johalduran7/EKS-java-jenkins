@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/johalduran7/EKS-java-jenkins.git
-    path: app-mvn
+    path: Kubernetes/app/k8s
     targetRevision: main
     helm:
       values: |
