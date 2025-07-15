@@ -110,7 +110,15 @@ step by step.
         --approve
     
     - Patch the argocd deployment:
-        
+        kubectl patch deployment argocd-repo-server -n argocd --type='json' -p='[{"op": "add", "path": "/spec/template/spec/serviceAccountName", "value": "argocd-sa"}]'
+    
+    - Whenever the tag changes in the manifest, for instance, when CI pipeline pushes a new tag to ECR and updates the manifest of the app, ArgoCD reads it every 3 minutes and shows the changes in Differ, then you can either automatically or manually sync rollout the new tag:
+        johnduran@NICE-C02F229ZMD6M:/Users/johnduran/github_john/EKS-java-jenkins> grep -A4 'image:' Kubernetes/app/k8s/values.yaml 
+        image:
+        repository: <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/app-book
+        tag: "1.0.1"
+        pullPolicy: always
+
 
 
 
