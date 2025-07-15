@@ -40,6 +40,15 @@ pipeline {
                 }
             }
         }
+        stage('Install Dependencies') {
+            steps {
+                dir("${APP_DIR}") {
+                    echo "📦 Installing Maven dependencies in ${APP_DIR}"
+                    sh 'mvn clean install'
+                }
+            }
+        }
+
         stage('Build and Push with Kaniko') {
             steps {
                 script {
