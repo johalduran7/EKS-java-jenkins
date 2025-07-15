@@ -58,18 +58,25 @@ pipeline {
                         // }
                         dir("${tempBuildDir}") {
                             writeFile file: 'run-kaniko.sh', text: '''
-                        #!/busybox/sh
-                        set -ex
-                        /kaniko/executor \
-                        --context=dir://$(pwd)/ \
-                        --dockerfile=$(pwd)/Dockerfile \
-                        --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
-                        --cache=false \
-                        --verbosity=info
-                        echo "✅ Kaniko script done"
-                        '''
+                            #!/busybox/sh
+                            set -ex
+                            /kaniko/executor \
+                            --context=dir://$(pwd)/ \
+                            --dockerfile=$(pwd)/Dockerfile \
+                            --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                            --cache=false \
+                            --verbosity=info
+                            echo "✅ Kaniko script done"
+                            exit 0
+                            '''
                             sh 'chmod +x run-kaniko.sh'
-                            sh './run-kaniko.sh'
+                            def status = sh(script: './run-kaniko.sh', returnStatus: true)
+                            if (status != 0) {
+                                error "❌ Kaniko build failed with status ${status}"
+                            } else {
+                                echo "✅ Kaniko script completed with status ${status}"
+                            }
+
                         }
 
                     }
