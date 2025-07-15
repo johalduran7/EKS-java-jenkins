@@ -49,7 +49,7 @@ pipeline {
             }
         }
 
-        stage('Build and Push with Kaniko') {
+        stage('Build and Push with Kaniko - TEST') {
             steps {
                 script {
                     withCredentials([[
@@ -78,6 +78,43 @@ pipeline {
                             cat "${tempBuildDir}/Dockerfile"
                         """
                         dir("${tempBuildDir}") {
+                            echo "🚀 Starting Kaniko build"
+
+                            sh '''
+                            /kaniko/executor \
+                                --context=dir://$(pwd)/ \
+                                --dockerfile=$(pwd)/Dockerfile \
+                                --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                --cache=false \
+                                --verbosity=info
+                            '''
+
+                            echo "✅ Kaniko build complete"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Build and Push with Kaniko') {
+            steps {
+                script {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'AWS_CREDENTIALS_ID',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    ]]) {
+
+                        def registry = sh(
+                            script: """
+                                aws sts get-caller-identity --query Account --output text
+                            """, returnStdout: true
+                        ).trim()
+                        env.ECR_REGISTRY = "${registry}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+                        echo "🔑 Authenticated to ${env.ECR_REGISTRY}"
+
+                        dir("${APP_DIR}") {
                             echo "🚀 Starting Kaniko build"
 
                             sh '''
