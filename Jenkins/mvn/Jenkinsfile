@@ -4,11 +4,9 @@ pipeline {
     }
 
     environment {
-        # Changed VERSION and ECR_REPO_NAME for the test image
         TEST_IMAGE_VERSION = 'test-simple-$(date +%s)' // Unique tag for each run
         ECR_REPO_NAME = 'simple-test-image-from-pipeline' // New repo name for this test image
         AWS_REGION = 'us-east-1'
-        # APP_DIR is no longer needed for this specific test
     }
 
     stages {
