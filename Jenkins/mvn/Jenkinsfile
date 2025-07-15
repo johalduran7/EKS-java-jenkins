@@ -13,7 +13,33 @@ pipeline {
 
     stages {
 
+        stage('Detect Branch') {
+            steps {
+                script {
+                    sh 'printenv'
 
+                    def branchName = env.GIT_BRANCH?.trim()
+                    if (!branchName) {
+                        def detectedBranch = sh(
+                            script: "git branch -r --contains ${env.GIT_COMMIT} | sed 's| *origin/||'",
+                            returnStdout: true
+                        ).trim()
+                        if (detectedBranch) {
+                            ENVIRONMENT = detectedBranch
+                            echo "✔ Detected branch: ${ENVIRONMENT}"
+                        } else {
+                            error "❌ Commit ${env.GIT_COMMIT} not found in any branch."
+                        }
+                    } else {
+                        ENVIRONMENT = sh(
+                            script: "echo ${env.GIT_BRANCH} | sed 's| *origin/||'",
+                            returnStdout: true
+                        ).trim()
+                        echo "✔ Detected branch (GIT_BRANCH available): ${ENVIRONMENT}"
+                    }
+                }
+            }
+        }
         stage('Build and Push with Kaniko') {
             steps {
                 script {
