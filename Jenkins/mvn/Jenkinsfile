@@ -60,14 +60,30 @@ pipeline {
                             writeFile file: 'run-kaniko.sh', text: '''
                             #!/busybox/sh
                             set -ex
+
                             /kaniko/executor \
                             --context=dir://$(pwd)/ \
                             --dockerfile=$(pwd)/Dockerfile \
                             --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
                             --cache=false \
-                            --verbosity=info
-                            echo "✅ Kaniko script done"
-                            exit 0
+                            --verbosity=info > kaniko.log 2>&1 &
+
+                            KANIKO_PID=$!
+
+                            # Stream logs so Jenkins doesn't think it's idle/stuck
+                            tail -f kaniko.log &
+                            TAIL_PID=$!
+
+                            # Wait for Kaniko to finish
+                            wait $KANIKO_PID
+                            KANIKO_EXIT=$?
+
+                            # Kill tail process
+                            kill $TAIL_PID || true
+
+                            echo "✅ Kaniko exited with code $KANIKO_EXIT"
+                            exit $KANIKO_EXIT
+
                             '''
                             sh 'chmod +x run-kaniko.sh'
                             def status = sh(script: './run-kaniko.sh', returnStatus: true)
