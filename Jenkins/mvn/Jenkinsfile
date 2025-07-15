@@ -33,6 +33,7 @@ pipeline {
 
                         echo "🔑 Authenticated to ${env.ECR_REGISTRY}"
                         def tempBuildDir = 'kaniko-temp-build'
+                        sh "mkdir ${tempBuildDir}"
                         sh """
                             echo 'FROM alpine:latest' > "${tempBuildDir}/Dockerfile"
                             echo 'WORKDIR /test' >> "${tempBuildDir}/Dockerfile"
