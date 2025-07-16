@@ -5,7 +5,8 @@ replicaCount: 1
 image:
   repository: 948586925757.dkr.ecr.us-east-1.amazonaws.com/app-book
   tag: "1.0.2"
-  pullPolicy: always
+  #pullPolicy: always  # always doesn't work with ArgoCD because it syncs every 3 minutes
+  pullPolicy: IfNotPresent 
 
 container:
   targetPort: "8080"
