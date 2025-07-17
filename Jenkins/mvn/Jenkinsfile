@@ -54,10 +54,6 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                // Ensure APP_DIR is defined, e.g., in an 'environment' block
-                // environment {
-                //     APP_DIR = 'app-mvn' // Assuming your project's subfolder is 'app-mvn'
-                // }
 
                 dir("${APP_DIR}") { // Changes directory for the commands within this block
                     echo "Navigated to: ${APP_DIR}"
