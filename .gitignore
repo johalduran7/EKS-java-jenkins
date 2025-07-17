@@ -33,6 +33,10 @@ build/
 .project.apt_generated/ # Another annotation processing output
 !gradle-wrapper.jar # Keep the wrapper JAR if you use Gradle Wrapper
 !gradle-wrapper.properties # Keep the wrapper properties
+build.gradle
+settings.gradle
+
+
 
 # IntelliJ IDEA
 .idea/
