@@ -1,0 +1,5 @@
+com/example/johnduran/cicddemo/model/Client.class
+com/example/johnduran/cicddemo/repository/ClientRepository.class
+com/example/johnduran/cicddemo/controller/WebController.class
+com/example/johnduran/cicddemo/controller/ClientApiController.class
+com/example/johnduran/cicddemo/CicdDemoApplication.class

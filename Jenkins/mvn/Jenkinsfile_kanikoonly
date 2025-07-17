@@ -1,0 +1,90 @@
+pipeline {
+    agent {
+        label 'ecs_fargate_slaves_default'
+    }
+
+    environment {
+        ENVIRONMENT = 'main'
+        VERSION = '1.0.1'
+        ECR_REPO_NAME = 'app-book'
+        AWS_REGION = 'us-east-1'
+        APP_DIR = 'app-mvn'
+    }
+
+    stages {
+        stage('Detect Branch') {
+            steps {
+                script {
+                    sh 'printenv'
+
+                    def branchName = env.GIT_BRANCH?.trim()
+                    if (!branchName) {
+                        def detectedBranch = sh(
+                            script: "git branch -r --contains ${env.GIT_COMMIT} | sed 's| *origin/||'",
+                            returnStdout: true
+                        ).trim()
+                        if (detectedBranch) {
+                            ENVIRONMENT = detectedBranch
+                            echo "✔ Detected branch: ${ENVIRONMENT}"
+                        } else {
+                            error "❌ Commit ${env.GIT_COMMIT} not found in any branch."
+                        }
+                    } else {
+                        ENVIRONMENT = sh(
+                            script: "echo ${env.GIT_BRANCH} | sed 's| *origin/||'",
+                            returnStdout: true
+                        ).trim()
+                        echo "✔ Detected branch (GIT_BRANCH available): ${ENVIRONMENT}"
+                    }
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir("${APP_DIR}") {
+                    echo "📦 Installing Maven dependencies in ${APP_DIR}"
+                    sh 'mvn clean install'
+                }
+            }
+        }
+
+        stage('Build and Push with Kaniko') {
+            steps {
+                script {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'AWS_CREDENTIALS_ID',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    ]]) {
+
+                        def registry = sh(
+                            script: """
+                                aws sts get-caller-identity --query Account --output text
+                            """, returnStdout: true
+                        ).trim()
+                        env.ECR_REGISTRY = "${registry}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+                        echo "🔑 Authenticated to ${env.ECR_REGISTRY}"
+
+                        dir("${APP_DIR}") {
+                            echo "🚀 Starting Kaniko build"
+
+                            sh '''
+                            /kaniko/executor \
+                                --context=dir://$(pwd)/ \
+                                --dockerfile=$(pwd)/Dockerfile \
+                                --destination=${ECR_REGISTRY}/${ECR_REPO_NAME}:${VERSION} \
+                                --cache=false \
+                                --verbosity=info
+                            '''
+
+                            echo "✅ Kaniko build complete"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

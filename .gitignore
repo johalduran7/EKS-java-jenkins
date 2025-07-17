@@ -33,8 +33,8 @@ build/
 .project.apt_generated/ # Another annotation processing output
 !gradle-wrapper.jar # Keep the wrapper JAR if you use Gradle Wrapper
 !gradle-wrapper.properties # Keep the wrapper properties
-build.gradle
-settings.gradle
+!build.gradle
+!settings.gradle
 
 
 
@@ -116,7 +116,7 @@ Desktop.ini # Windows
 # If you create local-only K8s manifests for testing:
 # *.local.yaml
 
-*
+
 !**/
 *.md
 *.deb

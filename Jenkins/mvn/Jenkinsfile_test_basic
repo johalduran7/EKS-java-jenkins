@@ -1,0 +1,30 @@
+pipeline {
+    agent {
+        label 'master'
+    }
+    tools {
+        maven 'maven-3.9.10'
+        jdk 'jdk17'
+    }
+    stages {
+        stage('Verify Maven Version') {
+            steps {
+                echo 'Checking environment variables...'
+                sh 'env' // <--- ADD THIS LINE
+                echo 'Checking Maven version...'
+                sh 'mvn -v'
+            }
+        }
+    }
+    post {
+        always {
+            echo 'Pipeline finished.'
+        }
+        success {
+            echo 'Maven version check succeeded!'
+        }
+        failure {
+            echo 'Maven version check failed!'
+        }
+    }
+}
