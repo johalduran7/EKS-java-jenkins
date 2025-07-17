@@ -56,7 +56,7 @@ pipeline {
             steps {
                 dir("${APP_DIR}") { // Changes directory for the commands within this block
                     echo "Navigated to: ${APP_DIR}"
-                    sh 'gradle clean install' // Execute shell command directly
+                    sh 'gradle clean build' // Execute shell command directly
                 }
             }
         }
