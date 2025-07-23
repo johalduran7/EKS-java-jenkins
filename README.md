@@ -70,18 +70,19 @@ eksctl utils associate-iam-oidc-provider --region us-east-1 --cluster eks-cluste
 
 create Namespace:
 ```javascript
-kubetl create namespace app-book
+kubectl create namespace app-book
 ```
 
-update the file secrets/secrets.override.yaml with the configMap values and Secrets. For secrets, encode them into base64 format.
+update the f    ile secrets/secrets.override.yaml with the configMap values and Secrets. For secrets, encode them into base64 format.
 ```javascript
 echo -n "value" | base64
 
 ```
+Also, update the configmap values as you need.
 
 create Secrets and ConfigMaps
 ```javascript
-kubetl apply -f secrets/secrets.override.yaml
+kubectl apply -f secrets/secrets.override.yaml -n app-book
 ```
 
 
