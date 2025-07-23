@@ -1,5 +1,5 @@
 
-# EKS Java App with Jenkins, Maven, Postgres, and ArgoCD
+# EKS Java App with Jenkins, Maven/Gradle, Postgres, and ArgoCD
 
 This project demonstrates a full CI/CD pipeline for a Java Spring Boot application (`app-book`) deployed on Amazon EKS, using Jenkins (on ECS Fargate), ECR, Maven, Helm, and ArgoCD.
 
