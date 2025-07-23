@@ -13,13 +13,3 @@ env:
   POSTGRES_DB: john_duran_db
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: "youpassword"
-
-pgadmin:
-  # Pgadmin access
-  email: "YOUR EMAIL"
-  password: "YOUR PASSWORD"
-  # Postgress access
-  PGHOST: postgres-service
-  PGUSER: postgres
-  PGPASSWORD: "postgres"
-  PGDATABASE: john_duran_db

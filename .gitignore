@@ -148,6 +148,7 @@ Desktop.ini # Windows
 app/node_modules/
 kubernetes_doc.yaml
 values.override.yaml
+secrets.override.yaml
 dashboard.key
 dashboard.crt
 *.override.yaml

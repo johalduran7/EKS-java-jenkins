@@ -66,13 +66,32 @@ mapUsers: |
 eksctl utils associate-iam-oidc-provider --region us-east-1 --cluster eks-cluster-book --approve
 ```
 
-## 6. Deploy PostgreSQL
+## 6. Create Secrets, ConfigMaps, and namespace for the project
+
+create Namespace:
+```javascript
+kubetl create namespace app-book
+```
+
+update the file secrets/secrets.override.yaml with the configMap values and Secrets. For secrets, encode them into base64 format.
+```javascript
+echo -n "value" | base64
+
+```
+
+create Secrets and ConfigMaps
+```javascript
+kubetl apply -f secrets/secrets.override.yaml
+```
+
+
+## 7. Deploy PostgreSQL
 
 ```javascript
 helm install app-book-postgres ./postgres/k8s -f ./postgres/k8s/values.override.yaml -n app-book
 ```
 
-## 7. Deploy the Java App (`app-book`)
+## 8. Deploy the Java App (`app-book`)
 
 ### Authenticate to ECR
 
@@ -97,7 +116,7 @@ To upgrade later:
 helm upgrade app-book ./app/k8s -f ./app/k8s/values.override.yaml -n app-book
 ```
 
-## 8. Debugging DB Connection Issues
+## 9. Debugging DB Connection Issues
 
 Run test pod:
 
@@ -119,7 +138,7 @@ nc -zv postgres-service 5432
 psql -h postgres-service -U postgres -d john_duran_db
 ```
 
-## 9. Access the Application
+## 10. Access the Application
 
 ### Port Forward
 
@@ -131,7 +150,7 @@ kubectl port-forward service/app-book 8080:8080 -n app-book
 
 Use the external URL of the LoadBalancer created by the Helm chart.
 
-## 10. Deploy ArgoCD
+## 11. Deploy ArgoCD
 
 ```javascript
 kubectl create namespace argocd
