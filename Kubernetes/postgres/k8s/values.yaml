@@ -9,7 +9,3 @@ image:
 service:
   name: postgres-service
 
-env:
-  POSTGRES_DB: john_duran_db
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: "youpassword"

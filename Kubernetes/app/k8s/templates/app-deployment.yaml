@@ -22,23 +22,43 @@ spec:
           ports:
             #- containerPort: {{ .Values.container.targetPort }}
             - name: metrics  # This must match the PodMonitor "port" field
-              containerPort: 8080
+              containerPort: {{ .Values.container.targetPort }}
           env:
             - name: PGHOST
               value: {{ .Values.env.PGHOST }}
             - name: PGUSER
-              value: {{ .Values.env.PGUSER }}
+              valueFrom:
+                secretKeyRef:
+                  name: app-book-secrets
+                  key: PGUSER
             - name: PGPASSWORD
-              value: "{{ .Values.env.PGPASSWORD }}"
+              valueFrom:
+                secretKeyRef:
+                  name: app-book-secrets
+                  key: PGPASSWORD          
             - name: PGDATABASE
-              value: {{ .Values.env.PGDATABASE }}
+              valueFrom:
+                secretKeyRef:
+                  name: app-book-secrets
+                  key: PGDATABASE
             - name: PGPORT
-              value: "5432"
-              
+              valueFrom:
+                configMapKeyRef:
+                  name: app-book-configmap
+                  key: PGPORT              
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres-service:5432/john_duran_db
+              valueFrom:
+                configMapKeyRef:
+                  name: app-book-configmap
+                  key: SPRING_DATASOURCE_URL
             - name: SPRING_DATASOURCE_USERNAME
-              value: postgres
+              valueFrom:
+                secretKeyRef:
+                  name: app-book-secrets
+                  key: PGUSER
             - name: SPRING_DATASOURCE_PASSWORD
-              value: postgres
+              valueFrom:
+                secretKeyRef:
+                  name: app-book-secrets
+                  key: PGPASSWORD 
               

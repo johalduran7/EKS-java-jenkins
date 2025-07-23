@@ -17,8 +17,3 @@ service:
 
 env:
   PGHOST: postgres-service
-  PGUSER: postgres
-  PGPASSWORD: "postgres"
-  PGDATABASE: john_duran_db
-  PGPORT: "5432"
-  
